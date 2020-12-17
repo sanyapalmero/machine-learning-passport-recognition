@@ -4,3 +4,4 @@ passports-training-dataset/
 venv/
 chromedriver.exe
 debug.log
+model.h5
