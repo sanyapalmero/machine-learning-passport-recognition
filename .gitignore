@@ -1,0 +1,6 @@
+.vscode/
+passports-test-dataset/
+passports-training-dataset/
+venv/
+chromedriver.exe
+debug.log
