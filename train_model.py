@@ -2,7 +2,7 @@ import os
 
 import cv2
 import numpy
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, MaxPooling2D
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.models import Sequential, load_model
@@ -47,15 +47,30 @@ def load_image_dataset(path_dir):
     return numpy.array(images), numpy.array(labels)
 
 
-def display_images(images, labels):
-    pyplot.figure(figsize=(10, 10))
+def save_results(images, labels, filename):
+    plt.clf()
+    plt.figure(figsize=(10, 10))
     for i in range(25):
-        pyplot.subplot(5, 5, i+1)
-        pyplot.xticks([])
-        pyplot.yticks([])
-        pyplot.grid(False)
-        pyplot.imshow(images[i], cmap=pyplot.cm.binary)
-        pyplot.xlabel(CLASS_NAMES[labels[i]])
+        plt.subplot(5, 5, i+1)
+        plt.xticks([])
+        plt.yticks([])
+        plt.grid(False)
+        plt.imshow(images[i], cmap=plt.cm.binary)
+        plt.xlabel(CLASS_NAMES[labels[i]])
+    plt.savefig(filename)
+
+
+def save_graphics(history, epochs):
+    plt.clf()
+    arange = numpy.arange(0, epochs)
+    plt.plot(arange, history.history['loss'], label='loss')
+    plt.plot(arange, history.history['val_loss'], label='val_loss')
+    plt.plot(arange, history.history['accuracy'], label='accuracy')
+    plt.plot(arange, history.history['val_accuracy'], label='val_accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss/Accuracy')
+    plt.legend(loc='lower right')
+    plt.savefig("graphics.png")
 
 
 def create_model():
@@ -75,10 +90,10 @@ def create_model():
     return model
 
 
-def train_model(model, train_images, train_labels, epochs):
-    model.fit(train_images, train_labels, epochs=epochs)
+def train_model(model, train_images, train_labels, test_images, test_labels, epochs):
+    history = model.fit(train_images, train_labels, epochs=epochs, validation_data=(test_images, test_labels))
     model.save('model.h5')
-    return model
+    return model, history
 
 
 def check_model_accuracy(model, test_images, test_labels):
@@ -89,23 +104,20 @@ def check_model_accuracy(model, test_images, test_labels):
 def recognize(model, images):
     predictions = model.predict(images)
     print(predictions)
-    display_images(images, numpy.argmax(predictions, axis=1))
-    pyplot.savefig("results.png")
+    save_results(images, numpy.argmax(predictions, axis=1), "results.png")
 
 
 def main():
     print("Prepare train images...")
     train_images, train_labels = load_image_dataset(TRAIN_PASSPORTS_FOLDER)
     train_images = train_images / 255.0
-    display_images(train_images, train_labels)
-    pyplot.savefig("train_images.png")
+    save_results(train_images, train_labels, "train_images.png")
     print("Train images was prepared, you can check train_images.png file.")
 
     print("Prepare test images...")
     test_images, test_labels = load_image_dataset(TEST_PASSPORTS_FOLDER)
     test_images = test_images / 255.0
-    display_images(test_images, test_labels)
-    pyplot.savefig("test_images.png")
+    save_results(test_images, test_labels, "test_images.png")
     print("Test images was prepared, you can check test_images.png file.")
 
     retrain = True
@@ -118,7 +130,8 @@ def main():
         model = create_model()
         epochs = 10
         print(f"Start model training on {epochs} epochs.")
-        model = train_model(model, train_images, train_labels, epochs)
+        model, history = train_model(model, train_images, train_labels, test_images, test_labels, epochs)
+        save_graphics(history, epochs)
         print("Model training was successfully finished.")
 
     check_model_accuracy(model, test_images, test_labels)
