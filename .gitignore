@@ -5,3 +5,5 @@ venv/
 chromedriver.exe
 debug.log
 model.h5
+backup-models/
+backup-results/
