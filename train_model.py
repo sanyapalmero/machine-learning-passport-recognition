@@ -63,10 +63,10 @@ def save_results(images, labels, filename):
 def save_graphics(history, epochs):
     plt.clf()
     arange = numpy.arange(0, epochs)
-    plt.plot(arange, history.history['loss'], label='loss')
-    plt.plot(arange, history.history['val_loss'], label='val_loss')
-    plt.plot(arange, history.history['accuracy'], label='accuracy')
-    plt.plot(arange, history.history['val_accuracy'], label='val_accuracy')
+    plt.plot(arange, history.history['loss'], label='loss')  # потери при обучения
+    plt.plot(arange, history.history['val_loss'], label='val_loss')  # потери при оценке
+    plt.plot(arange, history.history['accuracy'], label='accuracy')  # точность обучения
+    plt.plot(arange, history.history['val_accuracy'], label='val_accuracy')  # точность оценивания
     plt.xlabel('Epoch')
     plt.ylabel('Loss/Accuracy')
     plt.legend(loc='lower right')
@@ -77,16 +77,17 @@ def create_model():
     model = Sequential()
 
     width, height = IMAGE_MAX_SIZE
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(width, height, 1)))
-    model.add(MaxPooling2D((2, 2)))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D((2, 2)))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(Flatten())
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(2))
+    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(width, height, 1)))  # Сверточный слой 1
+    model.add(MaxPooling2D((2, 2)))  # слой дискретизации на основе выборки 1
+    model.add(Conv2D(64, (3, 3), activation='relu'))  # Сверточный слой 2
+    model.add(MaxPooling2D((2, 2)))  # слой дискретизации на основе выборки 2
+    model.add(Conv2D(64, (3, 3), activation='relu'))  # Сверточный слой 3
+    model.add(Flatten())  # преобразование в одномерный вектор
+    model.add(Dense(64, activation='relu'))  # Полносвязный слой 1
+    model.add(Dense(2))  # Полносвязный слой 2
 
     model.compile(optimizer='adam', loss=SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
+    print(model.summary())
     return model
 
 
@@ -128,7 +129,7 @@ def main():
     else:
         print("Create new model...")
         model = create_model()
-        epochs = 10
+        epochs = 15
         print(f"Start model training on {epochs} epochs.")
         model, history = train_model(model, train_images, train_labels, test_images, test_labels, epochs)
         save_graphics(history, epochs)
